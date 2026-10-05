@@ -4,6 +4,8 @@
 #include <d3dx9.h>
 #include "Constants.h"
 
+class Decade;
+
 class Game {
 private:
     static Game* s_instance;
@@ -16,6 +18,8 @@ private:
 
     bool m_isRunning;
     float m_timeScale; // Used for Clock Up slow-motion effect!
+
+    Decade* m_decade;
 
     Game();
 
@@ -38,6 +42,8 @@ public:
     // TimeScale getter & setter for Clock Up
     void SetTimeScale(float scale) { m_timeScale = scale; }
     float GetTimeScale() const { return m_timeScale; }
+
+    Decade* GetPlayer() const { return m_decade; }
 
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 };

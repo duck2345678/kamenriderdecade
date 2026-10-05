@@ -1,10 +1,13 @@
 #include "Game.h"
+#include "../Objects/Decade.h"
+#include "TextureManager.h"
 
 Game* Game::s_instance = nullptr;
 
 Game::Game()
     : m_hWnd(NULL), m_hInstance(NULL), m_d3d(NULL), m_d3ddev(NULL),
-      m_spriteHandler(NULL), m_isRunning(false), m_timeScale(1.0f) {}
+      m_spriteHandler(NULL), m_isRunning(false), m_timeScale(1.0f),
+      m_decade(nullptr) {}
 
 Game::~Game() {
     CleanUp();
@@ -92,6 +95,10 @@ bool Game::Initialize(HINSTANCE hInstance, int nCmdShow) {
     hr = D3DXCreateSprite(m_d3ddev, &m_spriteHandler);
     if (FAILED(hr)) return false;
 
+    // 5. Initialize Decade Player
+    m_decade = new Decade(SCREEN_WIDTH / 2.0f, 380.0f);
+    m_decade->InitAnimations(m_d3ddev);
+
     m_isRunning = true;
     return true;
 }
@@ -125,19 +132,23 @@ void Game::Run() {
 }
 
 void Game::Update(float dt) {
-    // TODO: Update SceneManager & Input
+    if (m_decade) {
+        m_decade->Update(dt);
+    }
 }
 
 void Game::Render() {
     if (!m_d3ddev) return;
 
-    // Clear buffer (Dark background)
-    m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(20, 20, 30), 1.0f, 0);
+    // Clear buffer with sleek dark arena background
+    m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(18, 18, 28), 1.0f, 0);
 
     if (SUCCEEDED(m_d3ddev->BeginScene())) {
         m_spriteHandler->Begin(D3DXSPRITE_ALPHABLEND);
 
-        // TODO: Render Current Scene
+        if (m_decade) {
+            m_decade->Render(m_spriteHandler);
+        }
 
         m_spriteHandler->End();
         m_d3ddev->EndScene();
@@ -147,6 +158,13 @@ void Game::Render() {
 }
 
 void Game::CleanUp() {
+    if (m_decade) {
+        delete m_decade;
+        m_decade = nullptr;
+    }
+
+    TextureManager::GetInstance()->Clear();
+
     if (m_spriteHandler) { m_spriteHandler->Release(); m_spriteHandler = NULL; }
     if (m_d3ddev) { m_d3ddev->Release(); m_d3ddev = NULL; }
     if (m_d3d) { m_d3d->Release(); m_d3d = NULL; }

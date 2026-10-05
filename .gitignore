@@ -1,0 +1,33 @@
+# Visual Studio & C++ GitIgnore
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.opendb
+
+# Build outputs
+Debug/
+Release/
+x64/
+Win32/
+[Bb]in/
+[Oo]bj/
+*.obj
+*.ilk
+*.tlog
+*.lastbuildstate
+*.idb
+*.pdb
+*.exe
+*.dll
+*.lib
+*.exp
+*.log
+
+# Windows temporary files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/

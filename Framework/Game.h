@@ -5,6 +5,9 @@
 #include "Constants.h"
 
 class Decade;
+class Camera;
+class TileMap;
+class ParallaxBackground;
 
 class Game {
 private:
@@ -20,6 +23,9 @@ private:
     float m_timeScale; // Used for Clock Up slow-motion effect!
 
     Decade* m_decade;
+    Camera* m_camera;
+    TileMap* m_tileMap;
+    ParallaxBackground* m_background;
 
     Game();
 
@@ -44,6 +50,8 @@ public:
     float GetTimeScale() const { return m_timeScale; }
 
     Decade* GetPlayer() const { return m_decade; }
+    Camera* GetCamera() const { return m_camera; }
+    TileMap* GetTileMap() const { return m_tileMap; }
 
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 };

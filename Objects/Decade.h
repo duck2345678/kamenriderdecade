@@ -7,6 +7,9 @@
 #include "../Framework/TextureManager.h"
 #include "../Framework/Constants.h"
 
+class Camera;
+class TileMap;
+
 enum class DecadeState {
     Idle,
     Walk,
@@ -33,11 +36,6 @@ private:
     int m_health;
     int m_maxHealth;
 
-    // Double tap dash logic
-    float m_lastLeftTapTime;
-    float m_lastRightTapTime;
-    static constexpr float DOUBLE_TAP_THRESHOLD = 0.25f;
-
     // Dimension Kick tunnel cards
     struct DimensionCard {
         float x, y;
@@ -53,8 +51,10 @@ public:
     virtual ~Decade();
 
     void InitAnimations(LPDIRECT3DDEVICE9 d3ddev);
-    virtual void Update(float dt) override;
-    virtual void Render(LPD3DXSPRITE spriteHandler) override;
+    void Update(float dt, const TileMap* tileMap);
+    virtual void Update(float dt) override { Update(dt, nullptr); }
+    void Render(LPD3DXSPRITE spriteHandler, const Camera* camera);
+    virtual void Render(LPD3DXSPRITE spriteHandler) override { Render(spriteHandler, nullptr); }
 
     // Input processing
     void HandleInput();

@@ -29,5 +29,13 @@ Win32/
 # Windows temporary files
 Thumbs.db
 ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
+[Dd]esktop.ini
+
+# Raw asset archives and non-game files
+*.zip
+PSD/
+Aseprite/
+Overlay/
+Spritesheets/
+Font.txt
+License.txt

@@ -1,15 +1,15 @@
 #include "Decade.h"
 #include "DecadeSprites.h"
+#include "../Framework/Camera.h"
+#include "../Framework/TileMap.h"
 
 Decade::Decade(float startX, float startY)
-    : GameObject(startX, startY, 40.0f, 70.0f),
+    : GameObject(startX, startY, 24.0f, 48.0f),
       m_state(DecadeState::Idle),
       m_flipX(false),
       m_isGrounded(true),
       m_health(100),
       m_maxHealth(100),
-      m_lastLeftTapTime(0.0f),
-      m_lastRightTapTime(0.0f),
       m_cardSprite(nullptr) {
     m_type = ObjectType::Player;
 }
@@ -64,7 +64,7 @@ void Decade::SetState(DecadeState newState) {
     switch (m_state) {
         case DecadeState::Idle:          animName = "IDLE"; break;
         case DecadeState::Walk:          animName = "WALK"; break;
-        case DecadeState::Run:           animName = "WALK"; break; // Walk cycle at higher speed
+        case DecadeState::Run:           animName = "WALK"; break;
         case DecadeState::Jump:          animName = "JUMP"; break;
         case DecadeState::Fall:          animName = "JUMP"; break;
         case DecadeState::Block:         animName = "BLOCK"; break;
@@ -85,7 +85,7 @@ void Decade::SetState(DecadeState newState) {
         m_dimensionCards.clear();
         float dir = m_flipX ? -1.0f : 1.0f;
         for (int i = 1; i <= 4; ++i) {
-            m_dimensionCards.push_back({ m_x + dir * (i * 60.0f), m_y + (i * 20.0f) - 40.0f, false });
+            m_dimensionCards.push_back({ m_x + dir * (i * 50.0f), m_y + (i * 15.0f) - 30.0f, false });
         }
     }
 }
@@ -93,7 +93,6 @@ void Decade::SetState(DecadeState newState) {
 void Decade::HandleInput() {
     if (m_state == DecadeState::Defeat || m_state == DecadeState::Hurt) return;
 
-    // Do not interrupt locked attack animations until finished
     if (IsAttacking()) return;
 
     bool keyLeft = (GetAsyncKeyState(VK_LEFT) & 0x8000) != 0;
@@ -109,8 +108,8 @@ void Decade::HandleInput() {
     // Attack triggers (Highest priority)
     if (keyKick) {
         SetState(DecadeState::DimensionKick);
-        m_vx = m_flipX ? -280.0f : 280.0f;
-        m_vy = -200.0f; // slight hop up then plunge
+        m_vx = m_flipX ? -260.0f : 260.0f;
+        m_vy = -180.0f;
         return;
     }
     if (keyPunch) {
@@ -129,7 +128,7 @@ void Decade::HandleInput() {
         return;
     }
 
-    // Defensive Block / Crouch
+    // Defensive Block
     if (keyDown && m_isGrounded) {
         SetState(DecadeState::Block);
         m_vx = 0.0f;
@@ -138,7 +137,7 @@ void Decade::HandleInput() {
 
     // Jump
     if (keyJump && m_isGrounded) {
-        m_vy = -480.0f;
+        m_vy = -380.0f;
         m_isGrounded = false;
         SetState(DecadeState::Jump);
         return;
@@ -147,11 +146,11 @@ void Decade::HandleInput() {
     // Movement
     if (keyLeft) {
         m_flipX = true;
-        m_vx = -160.0f;
+        m_vx = -140.0f;
         if (m_isGrounded) SetState(DecadeState::Walk);
     } else if (keyRight) {
         m_flipX = false;
-        m_vx = 160.0f;
+        m_vx = 140.0f;
         if (m_isGrounded) SetState(DecadeState::Walk);
     } else {
         m_vx = 0.0f;
@@ -159,7 +158,7 @@ void Decade::HandleInput() {
     }
 }
 
-void Decade::Update(float dt) {
+void Decade::Update(float dt, const TileMap* tileMap) {
     HandleInput();
 
     // Gravity
@@ -171,16 +170,34 @@ void Decade::Update(float dt) {
         }
     }
 
-    // Integrate position
-    m_x += m_vx * dt;
+    // Movement integration & Collision
+    float newX = m_x + m_vx * dt;
+    float correctedX = newX;
+    if (tileMap && tileMap->CheckHorizontalCollision(newX, m_y, m_width, m_height, m_vx, correctedX)) {
+        m_x = correctedX;
+        m_vx = 0.0f;
+    } else {
+        m_x = newX;
+    }
+
     m_y += m_vy * dt;
 
-    // Temporary ground floor check (until TileMap collision is active)
-    float groundY = 380.0f;
-    if (m_y >= groundY) {
-        m_y = groundY;
-        m_vy = 0.0f;
-        m_isGrounded = true;
+    if (tileMap) {
+        float groundY = 0.0f;
+        if (m_vy >= 0 && tileMap->CheckGroundCollision(m_x, m_y, m_width, m_height, groundY)) {
+            m_y = groundY;
+            m_vy = 0.0f;
+            m_isGrounded = true;
+        } else {
+            m_isGrounded = false;
+        }
+    } else {
+        float defaultFloor = 380.0f;
+        if (m_y >= defaultFloor) {
+            m_y = defaultFloor;
+            m_vy = 0.0f;
+            m_isGrounded = true;
+        }
     }
 
     // Update active animation
@@ -204,7 +221,6 @@ void Decade::Update(float dt) {
         Animation* anim = m_animations[currentAnim];
         anim->Update(dt);
 
-        // Check if non-looping animation finished
         if (anim->IsFinished()) {
             if (m_state == DecadeState::AttackPunch ||
                 m_state == DecadeState::AttackSlash ||
@@ -217,15 +233,24 @@ void Decade::Update(float dt) {
     }
 }
 
-void Decade::Render(LPD3DXSPRITE spriteHandler) {
+void Decade::Render(LPD3DXSPRITE spriteHandler, const Camera* camera) {
     if (!m_isActive) return;
+
+    float renderX = m_x;
+    float renderY = m_y;
+    if (camera) {
+        camera->WorldToScreen(m_x, m_y, renderX, renderY);
+    }
 
     // Render Dimension Kick cards tunnel
     if (m_state == DecadeState::DimensionKick && m_cardSprite) {
         RECT cardRect = { 59, 10, 150, 200 };
         for (const auto& card : m_dimensionCards) {
             if (!card.isShattered) {
-                m_cardSprite->Draw(spriteHandler, card.x, card.y, &cardRect, m_flipX, 0.7f, D3DCOLOR_ARGB(200, 255, 255, 255));
+                float cX = card.x;
+                float cY = card.y;
+                if (camera) camera->WorldToScreen(card.x, card.y, cX, cY);
+                m_cardSprite->Draw(spriteHandler, cX, cY, &cardRect, m_flipX, 0.45f, D3DCOLOR_ARGB(200, 255, 255, 255));
             }
         }
     }
@@ -248,7 +273,7 @@ void Decade::Render(LPD3DXSPRITE spriteHandler) {
     }
 
     if (m_animations.find(currentAnim) != m_animations.end()) {
-        m_animations[currentAnim]->Render(spriteHandler, m_x, m_y, m_flipX, 0.6f);
+        m_animations[currentAnim]->Render(spriteHandler, renderX, renderY, m_flipX, 0.38f);
     }
 }
 
@@ -267,7 +292,7 @@ void Decade::TakeDamage(int damage) {
     if (IsInvulnerable() || m_state == DecadeState::Defeat) return;
 
     if (m_state == DecadeState::Block) {
-        damage = (int)(damage * 0.2f); // 80% damage reduction when blocking
+        damage = (int)(damage * 0.2f);
     }
 
     m_health -= damage;

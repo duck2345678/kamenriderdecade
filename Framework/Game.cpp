@@ -1,5 +1,8 @@
 #include "Game.h"
 #include "../Objects/Decade.h"
+#include "Camera.h"
+#include "TileMap.h"
+#include "ParallaxBackground.h"
 #include "TextureManager.h"
 
 Game* Game::s_instance = nullptr;
@@ -7,7 +10,7 @@ Game* Game::s_instance = nullptr;
 Game::Game()
     : m_hWnd(NULL), m_hInstance(NULL), m_d3d(NULL), m_d3ddev(NULL),
       m_spriteHandler(NULL), m_isRunning(false), m_timeScale(1.0f),
-      m_decade(nullptr) {}
+      m_decade(nullptr), m_camera(nullptr), m_tileMap(nullptr), m_background(nullptr) {}
 
 Game::~Game() {
     CleanUp();
@@ -95,8 +98,20 @@ bool Game::Initialize(HINSTANCE hInstance, int nCmdShow) {
     hr = D3DXCreateSprite(m_d3ddev, &m_spriteHandler);
     if (FAILED(hr)) return false;
 
-    // 5. Initialize Decade Player
-    m_decade = new Decade(SCREEN_WIDTH / 2.0f, 380.0f);
+    // 5. Initialize Camera
+    m_camera = new Camera(SCREEN_WIDTH, SCREEN_HEIGHT);
+    m_camera->SetMapLimits(MAP_PIXEL_WIDTH, MAP_PIXEL_HEIGHT);
+
+    // 6. Initialize Parallax Background
+    m_background = new ParallaxBackground();
+    m_background->Init(m_d3ddev);
+
+    // 7. Initialize TileMap
+    m_tileMap = new TileMap();
+    m_tileMap->Init(m_d3ddev);
+
+    // 8. Initialize Decade Player
+    m_decade = new Decade(80.0f, 180.0f);
     m_decade->InitAnimations(m_d3ddev);
 
     m_isRunning = true;
@@ -133,21 +148,35 @@ void Game::Run() {
 
 void Game::Update(float dt) {
     if (m_decade) {
-        m_decade->Update(dt);
+        m_decade->Update(dt, m_tileMap);
+    }
+
+    if (m_camera && m_decade) {
+        m_camera->Update(m_decade->GetX(), m_decade->GetY());
     }
 }
 
 void Game::Render() {
     if (!m_d3ddev) return;
 
-    // Clear buffer with sleek dark arena background
-    m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(18, 18, 28), 1.0f, 0);
+    m_d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(10, 10, 20), 1.0f, 0);
 
     if (SUCCEEDED(m_d3ddev->BeginScene())) {
         m_spriteHandler->Begin(D3DXSPRITE_ALPHABLEND);
 
-        if (m_decade) {
-            m_decade->Render(m_spriteHandler);
+        // 1. Draw Parallax Background layers
+        if (m_background && m_camera) {
+            m_background->Render(m_spriteHandler, m_camera);
+        }
+
+        // 2. Draw TileMap
+        if (m_tileMap && m_camera) {
+            m_tileMap->Render(m_spriteHandler, m_camera);
+        }
+
+        // 3. Draw Decade
+        if (m_decade && m_camera) {
+            m_decade->Render(m_spriteHandler, m_camera);
         }
 
         m_spriteHandler->End();
@@ -161,6 +190,18 @@ void Game::CleanUp() {
     if (m_decade) {
         delete m_decade;
         m_decade = nullptr;
+    }
+    if (m_tileMap) {
+        delete m_tileMap;
+        m_tileMap = nullptr;
+    }
+    if (m_background) {
+        delete m_background;
+        m_background = nullptr;
+    }
+    if (m_camera) {
+        delete m_camera;
+        m_camera = nullptr;
     }
 
     TextureManager::GetInstance()->Clear();

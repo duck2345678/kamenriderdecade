@@ -21,57 +21,74 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NOMINMAX;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(DXSDK_DIR)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)External\DXSDK\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(DXSDK_DIR)Lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)External\DXSDK\Lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d9.lib;d3dx9.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NOMINMAX;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)External\DXSDK\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(ProjectDir)External\DXSDK\Lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>d3d9.lib;d3dx9.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Framework\Game.cpp" />
-    <ClCompile Include="Framework\Sprite.cpp" />
-    <ClCompile Include="Framework\Animation.cpp" />
-    <ClCompile Include="Framework\TextureManager.cpp" />
-    <ClCompile Include="Framework\Camera.cpp" />
-    <ClCompile Include="Framework\ParallaxBackground.cpp" />
-    <ClCompile Include="Framework\TileMap.cpp" />
-    <ClCompile Include="Objects\Decade.cpp" />
+    <ClCompile Include="Engine\Core\Game.cpp" />
+    <ClCompile Include="Engine\Graphics\Sprite.cpp" />
+    <ClCompile Include="Engine\Graphics\Animation.cpp" />
+    <ClCompile Include="Engine\Graphics\TextureManager.cpp" />
+    <ClCompile Include="Engine\Graphics\Camera.cpp" />
+    <ClCompile Include="Game\World\ParallaxBackground.cpp" />
+    <ClCompile Include="Game\World\TileMap.cpp" />
+    <ClCompile Include="Game\Entities\Decade.cpp" />
+    <ClCompile Include="Game\Entities\LevelActors.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Framework\Constants.h" />
-    <ClInclude Include="Framework\Game.h" />
-    <ClInclude Include="Framework\Sprite.h" />
-    <ClInclude Include="Framework\Animation.h" />
-    <ClInclude Include="Framework\TextureManager.h" />
-    <ClInclude Include="Framework\Camera.h" />
-    <ClInclude Include="Framework\ParallaxBackground.h" />
-    <ClInclude Include="Framework\TileMap.h" />
-    <ClInclude Include="Framework\WorldMapData.h" />
-    <ClInclude Include="Objects\GameObject.h" />
-    <ClInclude Include="Objects\Decade.h" />
-    <ClInclude Include="Objects\DecadeSprites.h" />
-    <ClInclude Include="Physics\SweptAABB.h" />
+    <ClInclude Include="Engine\Core\Constants.h" />
+    <ClInclude Include="Engine\Core\Game.h" />
+    <ClInclude Include="Engine\Graphics\Sprite.h" />
+    <ClInclude Include="Engine\Graphics\Animation.h" />
+    <ClInclude Include="Engine\Graphics\TextureManager.h" />
+    <ClInclude Include="Engine\Graphics\Camera.h" />
+    <ClInclude Include="Game\World\ParallaxBackground.h" />
+    <ClInclude Include="Game\World\TileMap.h" />
+    <ClInclude Include="Game\World\WorldMapData.h" />
+    <ClInclude Include="Game\Entities\GameObject.h" />
+    <ClInclude Include="Game\Entities\Decade.h" />
+    <ClInclude Include="Game\Entities\LevelActors.h" />
+    <ClInclude Include="Game\Entities\DecadeSprites.h" />
+    <ClInclude Include="Engine\Physics\SweptAABB.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

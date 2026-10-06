@@ -1,5 +1,5 @@
 #include <windows.h>
-#include "Framework/Game.h"
+#include "Engine/Core/Game.h"
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     Game* game = Game::GetInstance();
